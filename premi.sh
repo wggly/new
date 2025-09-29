@@ -394,27 +394,29 @@ rm -rf /etc/vmess/.vmess.db
     }
 #Instal Xray
 function install_xray() {
-clear
-    print_install "Core Xray 1.8.1 Latest Version"
-    # install xray
-    #echo -e "[ ${green}INFO$NC ] Downloading & Installing xray core"
-    domainSock_dir="/run/xray";! [ -d $domainSock_dir ] && mkdir  $domainSock_dir
-    chown www-data.www-data $domainSock_dir
+    clear
+    print_install "Core Xray v25.3.6"
     
-    # / / Ambil Xray Core Version Terbaru
-latest_version="$(curl -s https://api.github.com/repos/XTLS/Xray-core/releases | grep tag_name | sed -E 's/.*"v(.*)".*/\1/' | head -n 1)"
-bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install -u www-data --version $latest_version
- 
-    # // Ambil Config Server
+    domainSock_dir="/run/xray"
+    ! [ -d $domainSock_dir ] && mkdir $domainSock_dir
+    chown www-data.www-data $domainSock_dir
+
+    # Ubah bagian ini: sebelumnya mengambil versi terbaru dari GitHub
+    # latest_version="$(curl -s https://api.github.com/repos/XTLS/Xray-core/releases | grep tag_name | sed -E 's/.*"v(.*)".*/\1/' | head -n 1)"
+    # bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install -u www-data --version $latest_version
+
+    # Ganti dengan versi yang kamu mau (misalnya v25.3.6)
+    bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install -u www-data --version v25.3.6
+
+    # Ambil config server
     wget -O /etc/xray/config.json "${REPO}limit/config.json" >/dev/null 2>&1
-    #wget -O /usr/local/bin/xray "${REPO}xray/xray.linux.64bit" >/dev/null 2>&1
     wget -O /etc/systemd/system/runn.service "${REPO}limit/runn.service" >/dev/null 2>&1
-    #chmod +x /usr/local/bin/xray
+
     domain=$(cat /etc/xray/domain)
     IPVS=$(cat /etc/xray/ipvps)
-    print_success "Core Xray 1.8.1 Latest Version"
-    
-    # Settings UP Nginix Server
+    print_success "Core Xray v25.3.6 berhasil dipasang"
+
+    # Setting nginx & haproxy
     clear
     curl -s ipinfo.io/city >>/etc/xray/city
     curl -s ipinfo.io/org | cut -d " " -f 2-10 >>/etc/xray/isp
@@ -424,13 +426,11 @@ bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release
     sed -i "s/xxx/${domain}/g" /etc/haproxy/haproxy.cfg
     sed -i "s/xxx/${domain}/g" /etc/nginx/conf.d/xray.conf
     curl ${REPO}limit/nginx.conf > /etc/nginx/nginx.conf
-    
-cat /etc/xray/xray.crt /etc/xray/xray.key | tee /etc/haproxy/hap.pem
 
-    # > Set Permission
+    cat /etc/xray/xray.crt /etc/xray/xray.key | tee /etc/haproxy/hap.pem
     chmod +x /etc/systemd/system/runn.service
 
-    # > Create Service
+    # Buat service
     rm -rf /etc/systemd/system/xray.service.d
     cat >/etc/systemd/system/xray.service <<EOF
 Description=Xray Service
@@ -450,9 +450,9 @@ LimitNOFILE=1000000
 
 [Install]
 WantedBy=multi-user.target
-
 EOF
-print_success "Konfigurasi Packet"
+
+    print_success "Konfigurasi Packet"
 }
 
 function ssh(){
